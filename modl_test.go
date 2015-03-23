@@ -470,6 +470,45 @@ func TestTransaction(t *testing.T) {
 	}
 }
 
+// Ensures that calling transactin methods with an outside
+// *sqlx.Tx works as expected
+func TestWrapTransaction(t *testing.T) {
+	dbmap := initDbMap()
+	defer dbmap.Cleanup()
+
+	inv1 := &Invoice{0, 100, 200, "t1", 0, true}
+	inv2 := &Invoice{0, 100, 200, "t2", 0, false}
+
+	tx, err := dbmap.Dbx.Beginx()
+	if err != nil {
+		panic(err)
+	}
+
+	trans := dbmap.WrapTx(tx)
+	trans.Insert(inv1, inv2)
+
+	// Commit on our standard *sqlx.Tx struct
+	if err = tx.Commit(); err != nil {
+		panic(err)
+	}
+
+	obj := &Invoice{}
+	err = dbmap.Get(obj, inv1.ID)
+	if err != nil {
+		panic(err)
+	}
+	if !reflect.DeepEqual(inv1, obj) {
+		t.Errorf("%v != %v", inv1, obj)
+	}
+	err = dbmap.Get(obj, inv2.ID)
+	if err != nil {
+		panic(err)
+	}
+	if !reflect.DeepEqual(inv2, obj) {
+		t.Errorf("%v != %v", inv2, obj)
+	}
+}
+
 func TestMultiple(t *testing.T) {
 	dbmap := initDbMap()
 	defer dbmap.Cleanup()

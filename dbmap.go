@@ -373,6 +373,12 @@ func (m *DbMap) Begin() (*Transaction, error) {
 	return &Transaction{m, tx}, nil
 }
 
+// Wraps an already existing sqlx Transaction granting the ability to use
+// modl query methods within the same transaction
+func (m *DbMap) WrapTx(tx *sqlx.Tx) *Transaction {
+	return &Transaction{m, tx}
+}
+
 // FIXME: This is a poor interface.  Checking for nils is un-go-like, and this
 // function should be TableFor(i interface{}) (*TableMap, error)
 // FIXME: rewrite this in terms of sqlx's reflect helpers
